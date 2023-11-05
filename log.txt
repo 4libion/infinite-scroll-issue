@@ -1,0 +1,76 @@
+user_id 1
+/users/1/avatars
+method: get
+params: None
+url: /users/1/avatars
+json: None
+files: None
+data: None
+headers: None
+cookies: None
+status: 500
+data: {'exc_code': 'InternalServiceError', 'exc_data': {}, 'message': 'Internal Service Error'}
+
+end_to_end\handlers\test_avatar_handlers.py:513 (TestEndToEndAvatarHandler.test_get_user_avatars)
+self = <tests.end_to_end.handlers.test_avatar_handlers.TestEndToEndAvatarHandler object at 0x0000020CCC4A6530>
+service_test_client = <tests.conftest.ServiceClient object at 0x0000020CCC792B60>
+create_user = <function create_user.<locals>._create_user at 0x0000020CCD73AB00>
+user_db_factory = <function user_db_factory.<locals>._factory at 0x0000020CCD73B130>
+create_avatar = <function create_avatar.<locals>._create_avatar at 0x0000020CCD73B250>
+avatar_db_factory = <function avatar_db_factory.<locals>._factory at 0x0000020CCD73B370>
+
+    async def test_get_user_avatars(
+        self,
+        service_test_client,
+        create_user,
+        user_db_factory,
+        create_avatar,
+        avatar_db_factory,
+    ):
+        user = await create_user()
+        await user_db_factory(user=user)
+        avatar_1 = await create_avatar(
+            user=user,
+            image=AvatarImage(
+                small_url="https://test1.com",
+                large_url="https://test2.com",
+            ),
+        )
+        await avatar_db_factory(avatar=avatar_1)
+        avatar_2 = await create_avatar(
+            user=user,
+            image=AvatarImage(
+                small_url="https://test1.com",
+                large_url="https://test2.com",
+            ),
+        )
+        await avatar_db_factory(avatar=avatar_2)
+        status, data = await service_test_client.get_user_avatars_handler(
+            user_id=1,
+        )
+        print("status:", status)
+        print("data:", data)
+>       assert data == {
+            'data': {
+                'items': [
+                    {'created_at': data['data']['items'][0]['created_at'],
+                     'id': 2,
+                     'large_url': 'https://test2.com',
+                     'small_url': 'https://test1.com',
+                     'user_id': 1},
+                    {'created_at': data['data']['items'][1]['created_at'],
+                     'id': 1,
+                     'large_url': 'https://test2.com',
+                     'small_url': 'https://test1.com',
+                     'user_id': 1}
+                ],
+                'limit': 100,
+                'offset': 0,
+                'total': None,
+            }
+        }
+E       KeyError: 'data'
+
+end_to_end\handlers\test_avatar_handlers.py:545: KeyError
+
+Process finished with exit code 1
